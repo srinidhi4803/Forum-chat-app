@@ -4,7 +4,7 @@ import { registerUser ,loginUser } from "../controllers/user.controller.js";
 const router = Router();
 
 router
-    .route('/login')
+    .route('/login') 
     .post(loginUser);
 
 router
@@ -12,3 +12,4 @@ router
     .post(registerUser);
 
 export default router;
+
