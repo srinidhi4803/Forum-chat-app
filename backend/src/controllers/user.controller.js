@@ -47,12 +47,13 @@ const loginUser=async (req,res)=>{
 
     const user=await User.findOne({email})
     if(!user){
-        throw new ApiError(409,"User Not Found");
+        //throw new ApiError(409,"User Not Found");
     }
     const isUserMatched=await user.isPasswordMatch(password);
 
     if(!isUserMatched){
-        throw new ApiError(40,"Invalid credentials");
+        //throw new ApiError(40,"Invalid credentials");
+        res.status(400).json({"message":"Invalid credentials"});
     }
     //generate token
     const token=user.generateToken();

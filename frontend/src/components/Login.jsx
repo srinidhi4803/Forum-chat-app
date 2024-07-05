@@ -10,7 +10,7 @@ function Login() {
   const {email,password}=formData;
   const handleSubmit = async (e)=>{
     e.preventDefault();
-    const response = await axios.post('http://localhost:4000/api/user/login',
+    const response = await axios.post('http://localhost:3000/api/user/login',
       {"email":email,
         "password":password
       });
