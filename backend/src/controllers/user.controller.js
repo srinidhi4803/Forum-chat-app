@@ -13,9 +13,13 @@ const registerUser=async (req,res)=>{
 
     const existingUser= await User.findOne({$or:[{username},{email}]}).select("-password");
 
-    if(existingUser){
+    if(existingUser?.username==username){
         //throw new ApiError(409,"User already exists");
-        res.status(409).json({"message":"user already exists"});
+        return res.status(409).json({"message":"User with this username already exists"});
+    }
+    if(existingUser?.email==email){
+        //throw new ApiError(409,"User already exists");
+        return res.status(409).json({"message":"User with this email already exists"});
     }
     
     const newUser =await User.create({
@@ -29,7 +33,7 @@ const registerUser=async (req,res)=>{
 
     if(!createdUser){
         //throw new ApiError(500,"User not created");
-       res.status(200).json({"message":"something went wrong"});
+       return res.status(200).json({"message":"something went wrong"});
     }
 
     res.status(201).json(new ApiResponse(201,"User created",createdUser));
@@ -57,7 +61,7 @@ const loginUser=async (req,res)=>{
     //generate token
     const token=user.generateToken();
 
-    res.status(200).cookie('token', token, {
+    res.status(200).cookie('Bearer', token, {
         httpOnly: true, 
         secure: true, 
         sameSite: 'Strict', 

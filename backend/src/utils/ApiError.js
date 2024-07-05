@@ -1,12 +1,13 @@
-class ApiError extends Error{
+class ApiError {
     constructor(
         statusCode,
         message="Something went wrong",
     ){
-        super(message);
         this.statusCode=statusCode;
         this.success=false;
-        this.data=null;
+        this.data={
+            message
+        };
         this.success=false;
     }
 }
