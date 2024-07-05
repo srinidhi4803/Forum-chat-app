@@ -9,7 +9,7 @@ Register------- In body>json
 }
 
 
-Login------------ In body>json or formdata
+POST /api/user/login------------ In body>json or formdata
 {
     "email": "sai@gmail.com",
     "password": "hrllo"

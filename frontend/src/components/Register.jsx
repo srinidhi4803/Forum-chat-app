@@ -114,13 +114,10 @@ const Register = () => {
       } finally {
         setTimeout(() => {
           setFormData({
-            fullname: "",
-            username: "",
-            email: "",
+            ...formData,
             password: "",
             confirmpassword: "",
           });
-          setMessage("");
         }, 2000);
       }
     }
