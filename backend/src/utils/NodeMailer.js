@@ -24,3 +24,4 @@ transporter.sendMail(mailOptions,(err,info)=>{
         console.log('successfully sent....');
    }
 });
+module.exports = transporter
