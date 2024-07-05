@@ -14,7 +14,8 @@ const registerUser=async (req,res)=>{
     const existingUser= await User.findOne({$or:[{username},{email}]}).select("-password");
 
     if(existingUser){
-        throw new ApiError(409,"User already exists");
+        //throw new ApiError(409,"User already exists");
+        res.status(409).json({"message":"user already exists"});
     }
     
     const newUser =await User.create({
@@ -27,7 +28,8 @@ const registerUser=async (req,res)=>{
     const createdUser=await User.findById(newUser._id).select("-password");
 
     if(!createdUser){
-        throw new ApiError(500,"User not created");
+        //throw new ApiError(500,"User not created");
+       res.status(200).json({"message":"something went wrong"});
     }
 
     res.status(201).json(new ApiResponse(201,"User created",createdUser));
