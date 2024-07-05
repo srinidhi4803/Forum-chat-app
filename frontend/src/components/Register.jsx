@@ -87,10 +87,11 @@ const Register = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+
     if (validate()) {
       try {
         const response = await axios.post(
-          "http://localhost:4000/api/user/register",
+          "http://localhost:3000/api/user/register",
           {
             fullname,
             username,
