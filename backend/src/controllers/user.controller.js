@@ -1,7 +1,10 @@
 import User from "../models/user.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
-
+import transporter from "../utils/NodeMailer.js"
+const generateOTP = ()=>{
+  return Math.floor(Math.random()*1000000).toString();
+}
 const registerUser = async (req, res) => {
   const { fullname, username, email, password } = req.body
 
@@ -27,48 +30,92 @@ const registerUser = async (req, res) => {
       .status(409)
       .json({ message: "User with this email already exists" })
   }
+  const otp = generateOTP();
+  const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minute
+  
+  let mailOptions = {
+    from: "forumchatapp@gmail.com",
+    to: email,
+    subject: "Account Registration",
+    html: `<h1 style="color:">Thank you for joining us</h1>
+           <p>We are excited to have you on our forum chat platform, ${fullname}!</p>
+           <p>Your OTP for account verification is:</p>
+           <h2>${otp}</h2>
+           <p>This OTP is valid for 10 minutes.</p>`,
+    text: `Thank you for joining us, ${fullname}!
+           We are excited to have you on our forum chat platform.
+           Your OTP for account verification is: ${otp}
+           This OTP is valid for 10 minutes.`,
+  };
 
-  const newUser = await User.create({
-    fullname,
-    username,
-    email,
-    password,
-  })
+  transporter.sendMail(mailOptions, async (err, info) => {
+    if (err) {
+      console.log("Error in sending email: " + err);
+      return res.status(500).json({ message: "Error in sending email" });
+    } else {
+      console.log("Email sent successfully: " + info.response);
+      const newUser = await User.create({
+        fullname,
+        username,
+        email,
+        password,
+        otp,
+        otpExpires,
+      });
 
-  const createdUser = await User.findById(newUser._id).select("-password")
+      const createdUser = await User.findById(newUser._id).select("-password");
+      if (!createdUser) {
+        return res.status(200).json({ message: "Something went wrong" });
+      }
+      res.status(201).json(new ApiResponse(201, "User created. Please verify your OTP.", createdUser));
+      
+    }
+  });
+};
+const verifyOTP = async (req, res) => {
+  const { email, otp } = req.body;
+  const user = await User.findOne({ email });
 
-  if (!createdUser) {
-    //throw new ApiError(500,"User not created");
-    return res.status(200).json({ message: "something went wrong" })
+  if (!user) {
+    return res.status(400).json({ message: "Invalid email or OTP" });
   }
 
-  res.status(201).json(new ApiResponse(201, "User created", createdUser))
-}
+  if (user.otp !== otp || user.otpExpires < Date.now()) {
+    return res.status(400).json({ message: "Invalid or expired OTP" });
+  }
+
+  user.otp = undefined;
+  user.otpExpires = undefined;
+  user.isVerified = true;
+  await user.save();
+
+  res.status(200).json(new ApiResponse(200, "OTP verified successfully. Account is now active.", user));
+};
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body
 
   if ([email, password].some((field) => field?.trim() == "")) {
     //throw new ApiError(400,"All fields are required");
-   return res.status(200).json("all fields are required")
+    return res.status(200).json("all fields are required")
   }
 
   const user = await User.findOne({ email })
   if (!user) {
     //throw new ApiError(409,"User Not Found");
-    return  res.status(200).json("User Not Found")
+    return res.status(200).json("User Not Found")
   } else {
     const isUserMatched = await user.isPasswordMatch(password)
     console.log("match" + isUserMatched)
     if (!isUserMatched) {
       //throw new ApiError(40,"Invalid credentials");
-     return  res.status(400).json({ message: "Invalid credentials" })
+      return res.status(400).json({ message: "Invalid credentials" })
     }
 
     //generate token
     const token = user.generateToken()
 
- return res
+    return res
       .status(200)
       .cookie("Bearer", token, {
         httpOnly: true,
@@ -89,4 +136,4 @@ const logOut = async (req, res) => {
   res.status(200).json(new ApiResponse(200, "User logged out"))
 }
 
-export { registerUser, loginUser, logOut }
+export { registerUser, loginUser, logOut,verifyOTP }

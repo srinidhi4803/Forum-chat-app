@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import {Link} from "react-router-dom"
 import {
   Container,
   TextField,
@@ -23,13 +24,15 @@ const Register = () => {
     email: "",
     password: "",
     confirmpassword: "",
+    otp: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const { fullname, username, email, password, confirmpassword } = formData;
+  const [isOTPSent, setIsOTPSent] = useState(false);
+  const { fullname, username, email, password, confirmpassword, otp } = formData;
   const navigate = useNavigate();
 
   const handleClickShowPassword = () => {
@@ -86,39 +89,45 @@ const Register = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-
     if (validate()) {
       try {
-        const response = await axios.post(
-          "http://localhost:3000/api/user/register",
-          {
-            fullname,
-            username,
-            email,
-            password,
-            confirmpassword,
-          }
-        );
+        const response = await axios.post("http://localhost:3000/api/user/register", {
+          fullname,
+          username,
+          email,
+          password,
+        });
 
         setMessage(response.data.message);
         setAlertSeverity("success");
         setOpenSnackbar(true);
-        setTimeout(() => {
-          navigate("/home");
-        }, 2000);
+        setIsOTPSent(true);
       } catch (error) {
         setMessage(error.response?.data?.message || "Server error");
         setAlertSeverity("error");
         setOpenSnackbar(true);
-      } finally {
-        setTimeout(() => {
-          setFormData({
-            ...formData,
-            password: "",
-            confirmpassword: "",
-          });
-        }, 2000);
       }
+    }
+  };
+
+  const onVerifyOTP = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:3000/api/user/verify-otp", {
+        email,
+        otp,
+      });
+
+      setMessage(response.data.message);
+      setAlertSeverity("success");
+      setOpenSnackbar(true);
+      setTimeout(() => {
+        navigate("/home");
+      }, 2000);
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Server error");
+      setAlertSeverity("error");
+      setOpenSnackbar(true);
     }
   };
 
@@ -128,122 +137,145 @@ const Register = () => {
 
   return (
     <Container maxWidth="sm">
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={alertSeverity} sx={{ width: '100%' }}>
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={alertSeverity}>
           <AlertTitle>{alertSeverity === "error" ? "Error" : "Success"}</AlertTitle>
           {message}
         </Alert>
       </Snackbar>
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h4" component="h2" gutterBottom>
-          Register
-        </Typography>
-        <form onSubmit={onSubmit}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Full Name"
-                name="fullname"
-                value={fullname}
-                onChange={onChange}
-                placeholder="Enter your full name"
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Username"
-                name="username"
-                value={username}
-                onChange={onChange}
-                placeholder="Enter your username"
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Email"
-                name="email"
-                value={email}
-                onChange={onChange}
-                placeholder="Enter your email"
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={password}
-                onChange={onChange}
-                placeholder="Enter your password"
-                required
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton onClick={handleClickShowPassword} edge="end">
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Confirm Password"
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmpassword"
-                value={confirmpassword}
-                onChange={onChange}
-                placeholder="Re-enter your password"
-                required
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowConfirmPassword}
-                        edge="end"
-                      >
-                        {showConfirmPassword ? (
-                          <VisibilityOff />
-                        ) : (
-                          <Visibility />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                fullWidth
-              >
-                Register
-              </Button>
-            </Grid>
+
+      <Typography variant="h4" component="h1" gutterBottom>
+        Register
+      </Typography>
+      <Box component="form" onSubmit={onSubmit} noValidate sx={{ mt: 1 }}>
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          id="fullname"
+          label="Full Name"
+          name="fullname"
+          autoComplete="name"
+          autoFocus
+          value={fullname}
+          onChange={onChange}
+        />
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          id="username"
+          label="Username"
+          name="username"
+          autoComplete="username"
+          value={username}
+          onChange={onChange}
+        />
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          id="email"
+          label="Email Address"
+          name="email"
+          autoComplete="email"
+          value={email}
+          onChange={onChange}
+        />
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          name="password"
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          id="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={onChange}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={handleClickShowPassword}
+                  edge="end"
+                >
+                  {showPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          name="confirmpassword"
+          label="Confirm Password"
+          type={showConfirmPassword ? "text" : "password"}
+          id="confirmpassword"
+          autoComplete="current-password"
+          value={confirmpassword}
+          onChange={onChange}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={handleClickShowConfirmPassword}
+                  edge="end"
+                >
+                  {showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        {isOTPSent && (
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="otp"
+            label="OTP"
+            type="text"
+            id="otp"
+            value={otp}
+            onChange={onChange}
+          />
+        )}
+
+        {!isOTPSent ? (
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+          >
+            Register
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            fullWidth
+            variant="contained"
+            color="primary"
+            onClick={onVerifyOTP}
+            sx={{ mt: 3, mb: 2 }}
+          >
+            Verify OTP
+          </Button>
+        )}
+
+        <Grid container justifyContent="flex-end">
+          <Grid item>
+            <Typography variant="body2">
+              Already have an account? <Button component={Link} to="/login">Sign in</Button>
+            </Typography>
           </Grid>
-        </form>
+        </Grid>
       </Box>
     </Container>
   );
