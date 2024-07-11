@@ -14,7 +14,7 @@ import {
   Alert,
   AlertTitle,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff ,Refresh } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
@@ -47,7 +47,7 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const validate = () => {
+  const validate = () =>{
     const fullnameRegex = /^[A-Za-z\s]{2,}$/;
     if (!fullnameRegex.test(fullname)) {
       setMessage("Invalid full name");
@@ -122,7 +122,7 @@ const Register = () => {
       setAlertSeverity("success");
       setOpenSnackbar(true);
       setTimeout(() => {
-        navigate("/home");
+        navigate("/login");
       }, 2000);
     } catch (error) {
       setMessage(error.response?.data?.message || "Server error");
@@ -130,6 +130,24 @@ const Register = () => {
       setOpenSnackbar(true);
     }
   };
+  const onRegenerateOTP = async (e)=>{
+    e.preventDefault();
+    e.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:3000/api/user/regenerate-otp", {
+        fullname,email
+      });
+
+      setMessage(response.data.message);
+      setAlertSeverity("success");
+      setOpenSnackbar(true);
+      
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Server error");
+      setAlertSeverity("error");
+      setOpenSnackbar(true);
+    }
+  }
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
@@ -244,6 +262,19 @@ const Register = () => {
             id="otp"
             value={otp}
             onChange={onChange}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="regenerate OTP"
+                    onClick={onRegenerateOTP}
+                    edge="end"
+                  >
+                    <Refresh />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
         )}
 

@@ -58,7 +58,10 @@ const Login = () => {
       setMessage(response.data.message);
       setAlertSeverity("success");
       setOpen(true);
-      navigate("/home");
+      setTimeout(() => {
+        navigate("/home");
+      }, 2000);
+      
     } catch (error) {
       console.error("Login error:", error);
       setMessage(error.response?.data?.message || "Server error");

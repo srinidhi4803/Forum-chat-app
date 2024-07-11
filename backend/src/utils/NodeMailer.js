@@ -9,11 +9,14 @@ let transporter = nodemailer.createTransport({
     }
 });
 
-/*transporter.sendMail(mailOptions,(err,info)=>{
-   if(err){
-      console.log('error in send;....'+err);
-   }else{
-        console.log('successfully sent....');
-   }
-});*/
-export default transporter;
+const sendMail = async (mailOptions) => {
+   transporter.sendMail(mailOptions, async (err, info) => {
+      if (err) {
+        console.log("Error in sending email: " + err)
+      } else {
+        console.log("Email sent successfully: " + info.response)
+      }
+    })
+  }
+
+export default sendMail;

@@ -10,15 +10,14 @@ import {
   ListItemText,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-
 const Home = () => {
   const navigate = useNavigate();
-
   const handleLogout = () => {
-    // Logic for logging out (e.g., clearing cookies, token, etc.)
     navigate('/login');
   };
-
+  const handleRegister = ()=>{
+    navigate('/register');
+  }
   return (
     <div>
       <AppBar position="static">
@@ -26,8 +25,11 @@ const Home = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Forum Chat App
           </Typography>
+          <Button color="inherit" onClick={handleRegister}>
+            Register
+          </Button>
           <Button color="inherit" onClick={handleLogout}>
-            Logout
+            Login
           </Button>
         </Toolbar>
       </AppBar>
