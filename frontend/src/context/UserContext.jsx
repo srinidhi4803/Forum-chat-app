@@ -1,18 +1,32 @@
-import { createContext, useState } from "react";
-import PropTypes from "prop-types";
+import { createContext, useState ,useEffect } from "react";
 const UserContext = createContext();
 
 const UserProvider = ({children}) => {
-  const [userData, setUserData] = useState(null);
-  const [isLogin, setIsLogin] = useState(false);
+  const [user, setUser] = useState(null);
+  const [token,setToken]= useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem('user');
+    const storedToken = sessionStorage.getItem('token');
+
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
+    if (storedToken) {
+      setToken(storedToken);
+    }
+
+    setTimeout(()=>{
+      setIsInitialized(true);
+    },1000) // Mark initialization as complete
+  }, []);
 
   return (
-    <UserContext.Provider value={{ userData, setUserData, isLogin, setIsLogin }}>
+    <UserContext.Provider value={{ user, setUser, token, setToken, isInitialized }}>
       {children}
     </UserContext.Provider>
   );
 };
-UserProvider.propTypes = {
-    children: PropTypes.node.isRequired,
-};
-export default { UserContext, UserProvider };
+export { UserContext, UserProvider };

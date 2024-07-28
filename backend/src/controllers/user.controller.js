@@ -2,6 +2,8 @@ import User from "../models/user.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import sendMail from "../utils/NodeMailer.js"
+
+
 const registerUser = async (req, res) => {
   const { fullname, username, email, password } = req.body
 
@@ -40,7 +42,7 @@ const registerUser = async (req, res) => {
 
   const createdUser = await User.findById(newUser._id).select("-password")
   if (!createdUser) {
-    return res.status(200).json({ message: "Something went wrong" })
+    return res.status(409).json({ message: "Something went wrong" })
   }
   let mailOptions = {
     from: "forumchatapp@gmail.com",
@@ -57,60 +59,67 @@ const registerUser = async (req, res) => {
            This OTP is valid for 10 minutes.`,
   };
   await sendMail(mailOptions);  
-  res.status(201).json(
+  res.status(200).json(
       new ApiResponse(
-        201,
+        200,
         "User created. Please verify your OTP.",
         createdUser,
       ),
     );
  
 };
+
+
 const loginUser = async (req, res) => {
   const { email, password } = req.body
 
   if ([email, password].some((field) => field?.trim() == "")) {
     //throw new ApiError(400,"All fields are required");
-    return res.status(200).json("all fields are required")
+    return res.status(409).json({ message: "all fields are required" })
   }
 
   const user = await User.findOne({ email })
   if (!user) {
     //throw new ApiError(409,"User Not Found");
-    return res.status(200).json("User Not Found")
+    return res.status(404).json({ message: "User not found" })
   } else {
     const isUserMatched = await user.isPasswordMatch(password)
-    console.log("match" + isUserMatched)
+    
     if (!isUserMatched) {
       //throw new ApiError(40,"Invalid credentials");
-      return res.status(400).json({ message: "Invalid credentials" })
+      return res.status(409).json({ message: "Invalid credentials" })
     }
-
+    if(!user.isVerified)
+    {
+      return res.status(409).json({ message: "Not a verified user" })
+    }
     //generate token
     const token = user.generateToken()
 
     return res
       .status(200)
-      .cookie("Bearer", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-        maxAge: 3600000,
-      })
-      .json(new ApiResponse(200, "User logged in", user))
+      .json(new ApiResponse(200, "User logged in", user,token))
   }
 };
+
+
+
+
+
 const logOut = async (req, res) => {
-  res.clearCookie("Bearer", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "Strict",
-  })
   res.status(200).json(new ApiResponse(200, "User logged out"))
 };
+
+
+
+
 const generateOTP = () => {
   return Math.floor(Math.random() * 1000000).toString()
 };
+
+
+
+
 const regenerateOTP = async (req, res) => {
   const {fullname,email} = req.body
   const user = await User.findOne({ email })
@@ -139,6 +148,9 @@ const regenerateOTP = async (req, res) => {
   await sendMail(mailOptions);
   res.status(200).json({message:"otp re-sent successfully.."});
 };
+
+
+
 const verifyOTP = async (req, res) => {
   const { email, otp } = req.body
   const user = await User.findOne({ email })

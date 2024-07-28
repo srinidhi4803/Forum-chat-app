@@ -14,8 +14,11 @@ import {
   Alert,
   AlertTitle,
 } from "@mui/material";
-import { Visibility, VisibilityOff ,Refresh } from "@mui/icons-material";
+import { Visibility, VisibilityOff ,Refresh, BorderAllRounded } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { regenerateOTP, registerUser, verifyOTP } from "../services/UserService";
+
+
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -91,18 +94,15 @@ const Register = () => {
     e.preventDefault();
     if (validate()) {
       try {
-        const response = await axios.post("http://localhost:3000/api/user/register", {
-          fullname,
-          username,
-          email,
-          password,
-        });
-
-        setMessage(response.data.message);
+        const response = await registerUser(fullname,username,email,password);
+        
+        setMessage(response.message);
         setAlertSeverity("success");
         setOpenSnackbar(true);
         setIsOTPSent(true);
+
       } catch (error) {
+        console.log("Error: "+error);
         setMessage(error.response?.data?.message || "Server error");
         setAlertSeverity("error");
         setOpenSnackbar(true);
@@ -113,11 +113,8 @@ const Register = () => {
   const onVerifyOTP = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:3000/api/user/verify-otp", {
-        email,
-        otp,
-      });
-
+      const response = await verifyOTP(email,otp);
+      
       setMessage(response.data.message);
       setAlertSeverity("success");
       setOpenSnackbar(true);
@@ -132,11 +129,8 @@ const Register = () => {
   };
   const onRegenerateOTP = async (e)=>{
     e.preventDefault();
-    e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:3000/api/user/regenerate-otp", {
-        fullname,email
-      });
+      const response = await regenerateOTP(fullname,email);
 
       setMessage(response.data.message);
       setAlertSeverity("success");
@@ -155,8 +149,8 @@ const Register = () => {
 
   return (
     <Container maxWidth="sm">
-      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-        <Alert onClose={handleCloseSnackbar} severity={alertSeverity}>
+      <Snackbar  open={openSnackbar} autoHideDuration={5000} onClose={handleCloseSnackbar} anchorOrigin={{vertical:'top',horizontal:'right'}} >
+        <Alert style={{borderRadius: '30px'}} onClose={handleCloseSnackbar} severity={alertSeverity}>
           <AlertTitle>{alertSeverity === "error" ? "Error" : "Success"}</AlertTitle>
           {message}
         </Alert>
@@ -285,7 +279,7 @@ const Register = () => {
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
           >
-            Register
+            Create Account
           </Button>
         ) : (
           <Button
@@ -300,10 +294,10 @@ const Register = () => {
           </Button>
         )}
 
-        <Grid container justifyContent="flex-end">
+        <Grid container justifyContent="flex-end" padding="20px">
           <Grid item>
             <Typography variant="body2">
-              Already have an account? <Button component={Link} to="/login">Sign in</Button>
+              Already a User? <Link to="/login"> SignIn</Link>
             </Typography>
           </Grid>
         </Grid>

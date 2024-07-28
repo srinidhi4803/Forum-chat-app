@@ -1,6 +1,8 @@
 // src/Login.js
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState ,useContext } from "react";
+import { UserContext }from "../context/UserContext.jsx"
+import { loginUser } from "../services/UserService.js"; 
+
 import {
   Container,
   TextField,
@@ -13,7 +15,7 @@ import {
   Snackbar,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import MuiAlert from "@mui/material/Alert";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -30,6 +32,7 @@ const Login = () => {
   const [alertSeverity, setAlertSeverity] = useState("success");
   const [open, setOpen] = useState(false);
   const { email, password } = formData;
+  const {user,token,setUser,setToken}=useContext(UserContext);
   const navigate = useNavigate();
 
   const handleClickShowPassword = () => {
@@ -47,24 +50,27 @@ const Login = () => {
     setOpen(false);
   };
 
+
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:3000/api/user/login", {
-        email,
-        password,
-      });
-
-      setMessage(response.data.message);
+      const response = await loginUser(email,password);
+      
+      setUser(response.data);
+      setToken(response.token);
+      setMessage(response.message);
       setAlertSeverity("success");
       setOpen(true);
-      setTimeout(() => {
-        navigate("/home");
-      }, 2000);
+      navigate("/welcome");
       
     } catch (error) {
-      console.error("Login error:", error);
       setMessage(error.response?.data?.message || "Server error");
+      if(error.response?.data?.message=='User Not Found'){
+        setMessage("Create an account")
+        setTimeout(()=>{
+          navigate('/register');
+        },1000);
+      }
       setAlertSeverity("error");
       setOpen(true);
     }
@@ -72,8 +78,8 @@ const Login = () => {
 
   return (
     <Container maxWidth="sm">
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity={alertSeverity} sx={{ width: "100%" }}>
+      <Snackbar open={open} autoHideDuration={5000} onClose={handleClose} anchorOrigin={{vertical:'top',horizontal:'right'}}>
+        <Alert style={{borderRadius: '30px'}} onClose={handleClose} severity={alertSeverity} sx={{ width: "100%" }}>
           {message}
         </Alert>
       </Snackbar>
@@ -135,6 +141,13 @@ const Login = () => {
             </Grid>
           </Grid>
         </form>
+        <Grid container justifyContent="flex-end" padding="20px">
+          <Grid item>
+            <Typography variant="body2">
+              New User? <Link to="/register">SignUp</Link>
+            </Typography>
+          </Grid>
+        </Grid>
       </Box>
     </Container>
   );
