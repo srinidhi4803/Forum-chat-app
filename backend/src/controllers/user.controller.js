@@ -78,7 +78,7 @@ const loginUser = async (req, res) => {
     return res.status(409).json({ message: "all fields are required" })
   }
 
-  const user = await User.findOne({ email })
+  const user = await User.findOne({ email });
   if (!user) {
     //throw new ApiError(409,"User Not Found");
     return res.status(404).json({ message: "User not found" })
